@@ -1,0 +1,608 @@
+Algorithms Lecture Notes
+
+Week 1 Notes:
+
+Peak Finder:
+- Start with one-dimensional version
+    - runs on an array of numbers: 
+        a|b|c|d|e|f|g|h|i, a-i are numbers.  Want to find a peak.
+        1 2 3 4 5 6 7 8 9
+    - Have to define what you mean by a peak:
+        Position 2 is a peak if and only if: b >= a and b >= c.  If you are on the edges, only compare one neighbor.
+    - one-dimensional problem: find a peak if it exists (note: if peak definition uses >= instead of >, then peak will always exist).
+    
+    - Straightforward algorithm: Note that we want to characterize solution as well as complexity in terms of n.
+        
+        - Start from left.  Do one traversal: 1, 2, ..., n/2, ... n-1, n.
+            - If peak is in the middle, you look at n/2 elements.  
+            - Worst-case complexity (theta(n)) - you might have to look at all n elements.  Asymptotic complexity of this algorithm is linear. 
+    - Faster algorithm: implement binary search.
+        - Divide & Conquer algorithm
+        - Look at n/2, compare to left and right.
+            - If n/2 < n/2-1: look at 1-(n/2-1).
+            - Else if n/2 < n/2+1: look at (n/2+1)-n.
+            - Else: n is a peak.
+
+    T(n) is the work that an algorithm does on input of size n.  T(n/2) + Theta(1)
+
+- 2-Dimensional version
+    n rows, m columns.  a is a 2D peak iff a>=b, a>=c, a>=d, a>=e
+    - Straightforward algorithm: Greedy Ascent algorithm
+        - Start at some point, pick a direction (up, down, left, right).  If there is a larger number in that direction, go that way and repeat.
+        - Worst case is you look at all elements in the 2D array.  Order theta(nm).  In the case where m = n, theta (n^2)
+    - Divide & Conquer algorithm (attempt 1)
+        - Pick middle column j = m/2
+        - Find a 1D-peak at (i,j)
+        - Use (i,j) as a start to find a 1D-peak on row i
+        - Problem: the algorithm is incorrect.  It does not work in some cases.  The problem is that a 2D peak may not exist on row i.
+    - Divide & Conquer algorithm (attempt 2)
+        - Pick middle column j = m/2
+        - Find global max on column j at (i,j)
+        - Compare (i, j-1), (i,j), (i, j+1)
+        - Pick left cols if i,j-1 > i,j; similarly for right.
+        - If either conditions do not fire, then i,j is a 2D peak.
+        - When you have a single column, find the global maximum for that column, and you're done.
+        - Complexity: T(n,n) = T(n, m/2) + Theta(n)
+            - T(n, 1) = Theta(n)
+            - T(n, m) = Theta(nlog2n)
+
+Week 2:
+
+Algorithm definitions: 
+- computational procedure for solving a problem.  Input -> output.
+- program <-> algorithm.  (algorithm is a mathematical analogue of a program)
+- programs are written in a programming language.  Algorithms are written in pseudocode, i.e., structured English.
+- Ultimately, programs run on a computer.  Algorithms run on a model of computation (i.e., what a computer can do in constant time)
+    - Model computation specifies:
+        - what operations an algorithm is allowed to do.
+        - cost (time, ...) of each operation.
+Model computation types:
+- Random Access Machine (RAM) - also stands for Random Access Memory.
+    - computer RAM is a giant array.  You can access anything in the array in constant time.  RAM is organized by words.
+    - In constant time, an algorithm can:
+        - load O(1) words from memory, 
+        - do O(1) computations on them, 
+        - store O(1) words.
+        - do O(1) registered.
+    - A word is 'w' bits.  w should be at least lg(size of memory)
+    - For most algorithms, we can assume words are words.
+- Pointer Machine:
+    - Basically corresponds to object-oriented programming.
+    - Dynamically allocated objects.
+    - Object has O(1) fields.
+    - Field is either a word (e.g., integer) or a pointer.
+    - Pointer is something that points to another object or null/nill/none.
+    - Example is a linked list (value, previous pointer, next pointer)
+    - Following a pointer is O(1), changing a value is O(1).
+    - A pointer machine can be implemented by a random access machine, but not vice-versa.
+
+Python model: 
+- Python allows you to do both RAMs and Pointer Machines.  Also has many operations, each of which has a cost.  Some of them take much more than O(1) time.
+- Arrays are called lists.
+- Object-oriented programming in Python: Object with O(1) attributes fits into pointer machine model.
+    - Python does not have built-in linked lists, but they're easy to build.
+- Operations:
+    - L.append(x): O(1) time (making a new list would be O(n)).  Python does table doubling, which is basically O(1)
+    - L = L1 + L2: O(1+len(L1) + len(L2))
+    - x in L: O(len(L))
+    - len(L): O(1).  Length is stored in a list at formation.
+    - L.sort(): O(len(L)*log(len(L))) (comparison sort)
+
+- Dictionaries:
+    - D[key] = value: O(1).  Hash table.
+    - key in D: O(1) (with high probability, "whp").
+    
+- Long (long integers):
+    - x + y: O(|x| + |y|)
+    - x * y: O((|x| + |y|)^lg3) (better than O((|x| + |y|)^2), which is grade school multiplication).
+    - heapq: implements a heap.
+    
+Document Distance Problem:
+- given two documents d(D1, D2), what is the "distance" between them?  How similar are they?  Are two documents identical?
+    - useful for web search.
+    - Document is a sequence of words.
+    - Word is a string of alphanumeric characters.
+    - Idea: Look at shared Words to determine document distance.
+    - think of a document as a vector.
+        - D[w] = number of occurrences of w in D.
+    - Example:
+        D1 = "the cat": [the:1,cat:1,dog:0]
+        D2 = "the dog": [the:1,cat:0,dog:1]
+    - Ideas:
+        - Inner product/dot product: d'(D1,D2) = 1 ('the' matches but other words don't).
+            - Problem: long words with 50% similarity has higher score than shorter words with higher similarity.  Not scale invariant.
+        - Divide dot product by the length of the vectors.  D1*D2/(|D1||D2|) = the natural measure of the angle of the two vectors.  
+            - Three-step algorithm:
+                - Split doc into words.
+                - Compute word frequencies.
+                - Compute dot product of documents.
+            - Look at lecture notes for lecture 2.
+                - Different variations go from 228.1 seconds to 0.2 seconds for short documents.
+            - How do we do each step?
+                - Split doc: Scan through document and identify words based on non-alphanumeric characters.
+                    - re.findall(r'\w+', doc) -> be careful because regular expressions take exponential time.  
+                - Word frequency: for word in doc: count[word] += 1.  O(|n|)
+
+Lecture 3 Notes
+
+- Many problems become easy once items are sorted.
+        - Finding a median.
+        - Finding an element in an array.  Binary search (O(lg(n))) is enabled if an array is sorted.
+        - Data compression - sort an items to find duplicates, then use a single parameter to indicate frequency of duplicates.
+        - Computer graphics - for efficiency, you sometimes render objects front to back (no need to render objects behind opaque objects).
+        
+- Insertion Sort:
+    For i = 1, 2, ... n:
+        Insert A[i] into sorted array A[0:i-1]
+        by pairwise swaps down to the correct position for A[i]
+    - n steps, each with Theta(n) swaps and Theta(n) compares
+    - Generally, we assume that compares have equal cost to swaps, but in some cases compares may have higher cost than swaps.
+    - For comparisons, if you do binary search on A[0:i-1] (which is already sorted) (that takes theta(lg(i)) time), you get theta(nlg(n)) for compares, but it's still theta(n^2) for swaps.
+- Merge Sort:
+    - Divide and Conquer:
+        - For A, split into L and R, sort each (L' and R'), then merge.
+    - Merge Routine: compare smallest items in L' and R', then merge through each sub-array.
+    - Overall complexity is Theta(nlg(n))
+    
+- Proving complexity of Merge Sort:
+    - Recursion Tree:9
+        - Demonstrate that at each step T(n) = c1 (divide) + 2 * T(n/2) (recursion) + c * n (merge)
+            --> similar principles can apply if you have f(n) instead of c*n
+            - Split the recursion into a binary tree with branches and leaves.
+                - 1 + lgn levels
+                - n leaves
+                - Each level does cn work.
+                - Total work = (1+lgn) * cn = Theta(nlgn)
+                
+- Other considerations:
+    - Merge sort requires theta(n) auxiliary space
+    - In-place sort requires theta(1) auxiliary space
+    - Merge sort in python = 2.2nlogn microseconds
+    - Insertion sort in Python = 0.2n^2 microseconds
+    - Insertion sort in C = 0.01n^2 microseconds
+    
+- More on recursive trees:
+    - T(n) = 2T(n/2) + cn^2
+        - Top level = cn^2
+        - Next level = 1/4 cn^2 + 1/4 cn^2 = 1/2 cn^2
+        - Next level = 1/4 cn^2
+        ==> Top level dominates
+    - T(n)  = 2T(n/2) + c
+        - Bottom level dominates.  All of the work is done at the leaves.
+        
+Recitation Notes:
+- List1 + List2 = O(|L1|+|L2|)
+- List1.extend(L2) = O(|L2|)
+    --> the extend method is a more efficient version of list addition.  It only appends the second list to the first list, so it requires less memory and less time.
+
+Binary Search Trees
+- Height h.  Most operations are O(h).  
+- Ideally, h = lg(n), but h can = n.
+- height of a node is longest path from that node to a leaf.
+    - formula: max(height of lChild, height of rChild) + 1
+- Data structure augmentation: keeping track of the size of a subtree.
+    - Just as you can store the size of a subtree with constant overhead, you can also store the
+        height of each node with constant overhead.
+    - Depth of null pointers is defined to be '-1.'
+    
+AVL Trees - method of balancing Binary Search Trees (BSTs)
+- Goal: try to keep height = lg(n)
+- Method: require heights of left and right children of every node to differ by at most +/-1
+- Rebalancing AVL Trees:
+    - Rotations: can rotate left or right.  Shift children while maintaining BST order.
+    - General case of rebalancing: 
+        - Assume x is lowest node that violating AVL.
+        - Assume that x.right is higher than x.left.
+        - If x's right child (z) is right-heavy or balanced:
+            - Do a left-rotate of x.
+        - If x's right child is left-heavy:
+            - Do a right-rotate on z, then a left-rotate on x.
+- Abstract Data Types are defined by functions:
+    - Insert and delete: priority queue (heap, binary AVL tree)
+    - Min: priority queue
+    - Successor/Predecessor: only AVL trees has this, but they don't store everything in one array.
+
+Linear-Time Sorting
+- Comparison model of computation: 
+    - All input items are black boxes (ADTs - abstract data type)
+    - Only operations allowed are comparisons (<, >, ==, <=, >=)
+    - Time cost of a model = # of comparisons
+    - Decision Tree for the Comparison Model
+        - any comparison algorithm can be viewed as a tree of all possible comparisons and their outcomes, and the resulting answer
+        - decision tree vs. algorithm (Binary Search):
+            - Internal node in decision tree = binary decision in the algorithm (comparison).
+            - Leaf in decision tree = found answer.
+            - Root-to-leaf pathi in decision tree = algorithm execution.
+            - Length of Root-to-leaf path in decision tree = running time.
+            - Height of tree = worst-case running time.
+    - Searching Lower Bound:
+        - n preprocessed items
+        - finding a given item among them in a comparison model requires Omega(log n) time in the worst case.
+- RAM model of computation
+    - Integer Sorting
+        - Assume n keys for sorting are integers {0, 1, ..., k-1}
+        - Assume each fits in a word (words are defined as items that can be manipulated in constant time)
+        - Advantage of this model is that you can do a lot more than comparisons.
+        - For k < ?: can sort in linear time.
+    - Counting Sort:
+        - Allocate an array of k items:
+            - For every item in the array, add a counter whenever you see an item in the searchable array that matches the item in the array.
+            - For every item in the array with count>0, list item once for each count.
+            - Not a great algorithm because it only sorts integers.  We want to be able to sort items that have integer keys.
+        - L = array of k empty lists
+        - for j in range(n):
+            - L[key(A[j])].append(A[j])
+            - output = []
+            - for i in range(k):
+                - output.extend(L[i])
+        - Counting Sort = O(n+k).  If k > n, then you no longer have linear sorting time.
+    - Radix sort: uses Counting Sort as a sub-routine.
+        - If k is polynomial in n, you can still sort in linear time.
+        - imagine each integer as base b.
+        - # of digits = d = logb(k) + 1
+        - Sort ints by least significant digit ... sort by most significant digit.
+        - Perform each digit-based sort using counting sort. --> O(n+b)
+        - Total time: O((n+b)*d) = O((n+b)*logb(k)).  What should b be? n!
+        - Total time is minimized when b = Theta(n): O(nlogn(b)).  If k <= n^c, then total time: O(n*c)
+        
+Hashing
+- Very important.  Used in Python.
+- Usually called a Dictionary: Abstract data type (ADT)
+    - Maintain a set of items, each with a key.
+        - Insert(item).  Overwrite any existing item with that same key.
+        - Delete(item)
+        - Search(key).  Return item with given key or report that it doesn't exist.
+    - AVL trees give you O(lgn) time for these operations, but dictionaries let you search in O(1) with high probability.
+    - Python: dict
+        - D[key] -> search
+        - D[key] = val -> insert
+        - del D[key] -> delete
+        - item = (key, value)
+    - Motivation:
+        - docdist: counts of words in a document and calculating cross products.
+        - database: some types use hashing, some use search trees.  m-w.com gives you a definition based on the word submitted.
+        - compilers and interpreters
+        - network router server
+        - substring search
+        - strong commonalities (e.g., DNA strings)
+        - cryptography
+    - Simple approach:
+        - Direct-access table
+        - Store items in an array
+        - Index by key
+        - Why bad?
+            - Keys may not be integers
+            - Gigantic memory hog: array needs to be as large as the number of keys potentially needed.
+    - Solution to key/integer issue: Prehash.
+        - Map keys to non-negative integers
+        - In theory, keys are finite and discrete.  String of bits.
+        - In Python, hash(x) is the prehash of x.  Given an object, it produces an integer that the object can be mapped to.  
+            - Problem is that some objects produce the same value with the hash function.
+    - Solution to memory hog problem: Hashing.
+        - Reduce universe of all keys (integers) down to a reasonable size m for a table.
+        - Goal is for m (size of the table) to be Theta(n) number of items to be hashed.
+        - Problem: possibility of collision.
+    - Solution to collision problem: Chaining.
+        - Use a linked list of colliding elements in each slot of hash table.
+        - Worst case: Theta(n).  If you are unlucky, you'll end up with a single linked list of all hashed items.
+        - Fortunately, randomization usually prevents the worst case from happening.
+        - Assumption: Simple Uniform Hashing (false assumption).
+            - Each key is equally likely to be hashed to any slot of the table, independent of where other keys are hashed.
+        - Analysis:
+            - Expected length of chain for n keys, m slots = n/m. (also called alpha and known as the load factor).
+            - Alpha = Theta(1) if m = Theta(n)
+            - Running time: O(1 + alpha)
+    - Hash functions:
+        - 1. Division method: h(k) = k mod m: gives a number between 0 and m.  In theory, it can be bad if m is close to power of 2 or power of 10.  Better if m is prime.
+        - 2. Multiplication method: h(k) = [(a*k) mod 2^w] >> (w-r).  In practice this works well.
+        - 3. Universal hashing (only one that is good theoretically): h(k) = [(ak+b) mod p] mod m
+            - a and b are random numbers less than p
+            - p is a prime number bigger than all numbers needing hashing.
+            - For worst-case keys, k1 and k2: Pr(h(k1) = h(k2) = 1/m.
+     
+Hashing Continued:
+- Table doubling: keep table size (m) small enough so that it doesn't waste memory but large enough to keep functions fast.
+- Double table size once n > m.
+- Amortization:
+    - Operation takes "T(n) amortized" if k operations take <= k*T(n) time.
+    - Spread out the high costs so that it is cheap on average.
+- Table doubling amortized:
+    - k inserts take Theta(k) time ==> each insert takes Theta(1) time.
+- Deletion: if m = n/4 then shrink -> m/2.  Amortized time becomes Theta(1).
+- Python list implementation: actually constant time amortized, due to table doubling.
+
+String Matching:
+- Given two strings s and t:
+    - does s occur as a substring of t?
+- Rolling hash Abstract Data Type:
+    - rs = rolling hash for s; rt = rolling hash for t.
+    - r.append(c): adds char.c to end of x.
+    - r.skip(c): delete first character of x (assuming it is c).
+    - r(): gives a hash value of x = h(x)
+    - treat x as a multi-digit number u in base a (a = alphabet size).
+        - adding a character: shifting the number over by one = multiplying by a.
+        - append: u --> u*a + ord(c)
+        - skip: u --> u-c*a^(|x|-1)
+    ==> called Karp-Rabin string-matching algorithm:
+        - for c in s: rs.append(c)
+        - for c in t[:len(s)]: rt.append(c)
+        - if rs() == rt(): ...
+        - for i in range(len(s), len(t)):
+            - rt.skip(t[i-len(s)])
+            - rt.append(t[i])
+            - if rs() == rt: potentially s matches that substring of t.  Potentially because of collisions.
+            - In that case, do a char-by-char check, which will take O(s) time.  If s <> t: engineer it so that that happens with probability 1/s.
+            
+Lecture 10: Hashing III
+- Open Addressing
+    - Use a single array for a hash table.
+    - Uses less memory than pointers.  Easy to implement.
+    - Works by using probing:
+        - Hash function specifies order of slots to probe for a key (for insert/search/delete)
+        - Hash function takes universe of keys and trial count.  h: U * {0, 1, ... m-1} -> {0, 1, m-1}
+        - Goal: Vector (h(k,1), h(k,2), ... h(k, m-1) should be a permutation of 0, 1, ... m-1.  Should load-balance the table and make sure that all slots are equal opportunity.
+    - Insert(k, v):
+        - keep probing until an empty slot is found (or "Deleteme" flag).  Insert item when found.
+    - Search(k): 
+        - As long as the slots encountered are occupied by keys not equal to k, keep probing until you either encounter k or find an empty slot.  If you find a "deleteme" flag, keep searching.
+    - Subtlety with Delete(k):
+        - If you delete a key, then future searches for keys that collide with that key may falsely find an empty slot.
+    - Delete(k):
+        - When you delete, replace deleted item with "Deleteme" flag.
+    - Probing Strategies
+        - Linear Probing (bad):
+            - h(k,i) = [h'(k)+1] mod m
+            - Problem: You get clustering, consecutive groups of occupied slots, which keep getting longer.  
+            - Clustering works against load balancing.
+            - You end up losing constant-time lookup for most load factors.
+            - Under reasonable probabilistic assumptions, with alpha (load factor) less than 0.99, you see clusters of Theta(lgn) size.
+            - Even a hash function that works really well leads to clustering problems.
+        - Double Hashing
+            - h(k,i) = [h1(k) + ih2(k)] mod m.
+            - If h2(k) is relatively prime to m ==> permutation of 0,1, ... m-1
+            - Uniform Hashing Assumption (different from simple uniform hashing - independence of keys in terms of hashing to slots):
+                - Each key is equally likely to have any one of the m! permutations as its probe sequence.
+                    - Hard to get in practice, but double hashing can get pretty close.
+                - For alpha = n/m, cost of operations insert, etc. = 1/(1-alpha).
+                - In practice, you want to increase the size of your hash table once alpha > 0.5.
+                
+
+- Cryptographic Hashing 
+    - Example of password storage
+        - one-way hashing.  Given h(x) = Q, it is very hard to find x such that h(x) = Q.
+
+Call with Terry McGovern:
+- He's a project manager, works on keeping the team running smoothly.
+- Terry interviews software developers.
+    - Generally want have a mix of senior and junior people.
+    - Data science: 
+        - Didn't hear much about it just a few years ago, but Kaplan just bought two boot camps.
+        - He has a colleague who did a data science boot camp and was really happy.
+- There is a unicorn type person who knows how to talk to people, has some technical skill, and is a good communicator.  Career progress for developers really depends on communication skill.
+- For certain types of organizations, that is something they would be really interested in - people who have sufficient technical skill and solid communication skills.
+- $80K to hire people at the Project Manager/Scrum Master/Agile Coach/Delivery Manager role who have taken a scrum master course.  
+    - Co-pilot to how projects are being made.
+    - Good way to learn how companies work, get your foot in the door.
+    - Possible to grow into a different role if you're self-motivated.
+
+Lecture 13 - Breadth-First Search
+    - graph G = (V,E)
+        - V = set of vertices
+        - E = set of edges
+    - Diameter = length from starting state to goal state.
+    - Graph representations:
+        - Adjacency Lists:
+            - Array Adj of |V| linked lists
+            - For each vertex U part of V, Adj[u] stores u's neighbors.
+            - v.neighbors = Adj[v]
+            - Space: Theta(V+E)
+    - Breadth-First Search:
+        - Visit all nodes reachable from given s (part of V)
+        - Goal: O(V+E) time
+        - Look at nodes reachable in 0 moves, 1 move, 2 moves...
+        - Be careful to avoid duplicates (if at least one cycle, can run infinite loops)
+        
+        Pseudocode:
+        - BFS(s, Adj):
+            level = {s:0}
+            parent = {s:None}
+            i = 1
+            frontier = [s]
+            while frontier:
+                next=[]
+                for u in frontier:
+                    for v in Adj[u]:
+                        if v not in level:
+                            level[v] = i
+                            parent[v] = u
+                            next.append(v)
+                frontier = next
+                i += 1
+                
+        Shortest paths
+            - list of nodes in parent is shortest 
+                
+
+    
+Lecture 14: Depth First Search
+- Recursively explore the graph, backtracking as necessary.  Be careful not to repeat vertices.
+- DFS-Visit Pseudocode:
+    parent = {s: None}
+    DFS-Visit(Adj, s):
+        for v in Adj[s]:
+            if v not in parent:
+            parent[v] = s
+            DFS-Visit(V, Adj, s)
+        --> make sure to add s to Finished once you complete iterating through Adj[s]
+- DFS Pseudocode:
+    DFS(V, Adj):
+        parent = {}
+        for s in V:
+            if s not in parent:
+                parent[s] = None
+                DFS-Visit(V, Adj, s)
+- Analysis: running time is Theta(V+E)
+- DFS will not provide the shortest path, but it is useful for (1) edge classification and (2) topological sort.
+    - Edge Classification:
+        - Tree edges: defined by parent pointers.  Identified when you visit a new vertex via an edge.
+        - Other edges:
+            - Forward edges: go from a node to a descendant in the tree (can't exist in undirected graph)
+            - Backward edges: go from a node to an ancestor in the tree
+            - Cross edges: connect nodes who are not descendants or ancestors (can't exist in undirected graph)
+        - Edge classification is useful for Cycle Detection:
+            - G has a cycle if DFS has a back edge.
+    - Topological Sort: Job Scheduling
+        - Given directed acyclic graph (DAG) (acyclic = no cycles), order vertices so that all edges point from lower order to higher order.
+        - Topological Sort: run DFS, output reverse of finishing times of vertices.
+        - Correctness: for any edge e=(u,v), v finishes before u finishes.
+        
+Lecture 15: Single-Source Shortest Path Problems
+    - Subject involves graphs with weights on the edges.  
+        - Weights can be integers, real numbers, negatives, etc.  
+        - Different algorithms are optimized for different types of problems.
+    - Motivation: 
+        - Google Maps Navigation is a classic example of a shortest path problem.
+        - G(V, E, W): V = vertices, E = edges, W = weights.
+    - Two algorithms:
+        - Dijkstra: assumes non-negative edges.  Complexity O(VlgV+E) (think of E as being O(V^2))
+        - Bellman-Ford: O(V*E), needed for negative edges, but higher complexity than Dijkstra.
+    - Definitions:
+        - path p = <v0, v1, ..., vk>
+        - (vi, vi+1) part of E for 0<= i < k
+        - W(p) = sum up to k of w(vi, vi+1)
+        - Shortest path problem: find p with minimum weight
+        - V0->Vk (V0) is a path from V0 to V0 of weight 0.
+        - Shortest path weight from u to v as delta(u,v) = {min w(p) u->v if such a path exists or infinity otherwise}
+        - Interested in d(v): current weight of best path to v, and pi[v]: predecessor on current best path to v.
+    - Negative weights:
+        - Why?
+            - Reverse tolls
+            - Social networks
+        - Avoid if possible.  Algorithm for problem with no negative weights is simpler.
+        - Problem if you have negative cycles: could lead to negative loops.  
+            - Will lead to some nodes to have indeterminate shortest path lengths.
+            - Want the algorithm to terminate with shortest path lengths where possible and to mark other nodes as having indeterminate S-P lengths.
+    - General Structure:
+        - Initialize for u part of V:
+            - d[v] = infinity (no current shortest-path weight for next node)
+            - Pi[u] = Nil (no predecessor for first node examined)
+            - d[S] = 0 (no shortest-path weight for initial node)
+        - Repeat: select edge(u,v)
+            - if d[v] > d[u] + w(u,v):
+                - "Relax" edge(u,v): 
+                    - set d[v] = d[u] + w(u,v)
+                    - set Pi[v] = u
+            - Do until all edges have d[v] <= d[u] + w(u,v) (note that this is an O(E) check)
+                - Note that if you relax an edge, you may need to relax other edges.
+        - Problem with brute-force algorithm is that it leads to O(2^n) complexity.
+    - Optimal substructure:
+        - Subpaths of a shortest path are shortest paths.
+    - Triangle inequality: shortest path between S and v is less than or equal to delta(s,u) + delta(s,v)
+        
+Lecture 16: Dijkstra
+    - Review of relaxation:
+        - Relax(u, v, w):
+            - if d[v] > d[u] + w(u,v):
+                d[v] = d[u] + w(u,v)
+                Pi[v] = u
+    - DAG: directional acyclical graph.
+    - First Algorithm (requires DAG):
+        - 1. Topological sort on the DAG.  Path from u to v implies that u is before v is the ordering.
+        - 2. One pass over vertices in topologically sorted order, relaxing each edge that leaves each vertex.
+    - Dijkstra's Algorithm:
+        - Greedy algorithm, fairly simple.
+        - Gravity demo.
+        - Dijkstra(G, W, s)
+            - Initialize(G,s) (set d[s] = 0), S<-0, Q<-V[G] (Q is a priority queue).  S: vertices for which we know shortest paths, Q: vertices remaining to be checked.
+            - while Q <> 0:
+                u <- extract-min(Q) // deletes u from Q
+                S <- S union with {u}
+                for each vertex v in Adj[u]:
+                    relax (u,v,w)
+            - First time through, you pull s out of Q, relax all vertices in Adj[s]
+    - Complexity of Dijkstra
+        - Use Array for the priority queue:
+            - Extract-min: Theta(v)
+            - Decrease key (relax function): Theta(1)
+            - Overall: Theta(v^2)
+        - Use Binary heap for the priority queue:
+            - Extract-min: Theta(log(v))
+            - Decrease-key: Theta(log(v))
+            - Overall: Theta(vlog(v) + Elog(v)).  Can get better complexity using a Fibonacci heap.  Gives Theta(1) amortized for decrease-key.
+                
+Lecture 17: Bellman-Ford
+    - Can handle negative cycles.
+        - Need to be able to detect negative cycles and note which shortest-distance paths are undefined due to the negative-weight cycle.
+    - Review Generic Shortest-Path Algorithm:
+        Initialize for v part of V: d[v] <- infinity, Pi[v] <- nil; d[s] <- 0.
+        Repeat:
+            Select edge[somehow]
+            Relax edge(u,v,w) [if d[v] is greater than d[u] + w(u,v), update d[v]]
+        until you can't relax any more.
+    - Issues with Generic algorithm:
+        - Complexity could be exponential time, even for positive weight graphs. ==> fixed by Dijkstra
+        - Algorithm will not terminate if there is a negative-weight cycle reachable from the source. ==> fixed by Bellman-Ford
+    - Bellman-Ford (G,W,s)
+        Initialize() (same as in generic case)
+        for i=1 to |V|-1:
+            for each edge(u,v) part of E: // O(VE)
+                Relax(u,v,w)
+                    if d[v]<d[u]+w(u,v):
+                        d[v] = d[u] + w(u,v)
+                        Pi(v) = u
+        for each edge(u,v) part of E: // check for negative cycles.
+            if d[v] > d[u] + w(u,v):
+                then report: negative cycle exists.
+    - Proof: 
+        - If there are no negative cycles, then going through all edges V times will find all simple shortest paths.
+        - If the last pass reveals an edge that can be relaxed, then that means that some shortest paths are not simple, therefore negative cycles exist.
+    - Gives you the shortest simple path if no negative-weight cycles exist.  If such cycles exist, it will not provide an answer.
+        - If you want something that gives you a simple path *ignoring negative cycles* then you get an exponential-time complexity problem.
+    
+Lecture 18: Speeding up Dijkstra
+    - Optimization:
+        - Can optimize Dijkstra if you have a single target.
+    - Djikstra Code:
+        Initialize()
+            d[S] = 0; d[u<>S] = infinity
+       Q <- V[G]
+       while Q <> 0:
+        do u <- Extract_Min(Q)
+        for each vertex V part of Adj[u]:
+            do Relax(u, v, w)
+                d[v] decrement (if d[v] > d[u] + w(u,v): d[v] = d[u] + w(u,v))
+                Pi[v] <- u
+    - Single-Target Search:
+        - stop if u = t.
+    - Bi-Directional Search:
+        - Have s, t, nodes in between
+        - Alternate search s->t and t->s
+            - Do one step from s: process all s edges. {forward search}
+            - Do one step from t: process all t edges. (backward search)
+            - d[node] tracks priority, both d[s] and d[t] have 0 priority at the beginning and everything else has infinite priority.
+            - Different data structure needs:
+                - Twice as many min_priority_queues.
+                - df[u]: distances for forward search
+                - db[u]: distances for backward search
+                - Priority Queues: Qf (forward search), Qb (backward search)
+                - Pi_f, Pi_b -> path of predecessors.
+            - Termination condition?
+                - Some vertex u has been processed both in forward search and in backward search
+                - How do we find the shortest path (after termination) from s to t?
+                    - Claim: if w was processed first from both Qf and Qb, then find shortest path using Pi_f from s to w (forwards), 
+                    then find shortest path using Pi_b from t to w (backwards)
+                        - Problem: w may not be on the shortest path, though termination condition is correct.  -
+                        - Algorithm is designed to terminate when paths collide at the shortest-length path, which is not necessarily the shortest-weight path.
+                    - Find an x (possibly different from w) with the minimum df[x] + db[x].
+    - Goal-Directed Search:
+        - Modify edge weights with potential functions in order to modify priorities to prune the search. 
+        - wbar(u,v) = w(u,v) - lambda(u) + lambda(v)
+            - Goal is to define lambda so that it steers you toward nodes that are likely to get you to your destination more quickly.
+            - wbar(p) = w(p) - lambda_t(s) + lambda_t(t)
+            - potential function can be defined using landmarks.
+                - landmark l (part of V)
+                - precompute delta(u, l) --> find the shortest path from any vertex to the landmark.
+                - lambda_t(u) = delta(u,l) - delta(t, l).
+                ==> correct based on triangle inequality.  With the correct choice of landmark, it will make Dijkstra faster.
+    
+    

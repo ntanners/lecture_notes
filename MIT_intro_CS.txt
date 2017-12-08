@@ -1,0 +1,149 @@
+Python Lecture 11 Notes
+
+Abstract Data Types
+- Interface: explains what the methods do (at the level of the user), not how they do it.
+- Specification (of a type, function, or method): tells us what that thing does.  Different from implementation.
+
+Data Hiding: No direct access to instance variables and class variables.  Keeping data attributes hidden from the user.  
+- Implementation of an abstract data type can change so long as the specification is not affected.
+- Python does not enforce data hiding, but other languages (e.g., Java) do. 
+- Class variables are associated with the class, rather than the instance.
+
+A subclass inherits properties of a superclass and adds properties.
+- Subclasses can override properties of a superclass
+
+Objects have methods and attributes.
+
+Python Lecture 12 Notees
+
+Yield is a generator: is a function that remembers the point in the function body where it last returned, plus all of the local variables.
+
+Example: in the students class,
+def allStudents(self):
+    for s in self.students:
+        yield s
+        
+This allows the following types of interactions:
+for s in SixHundred.allStudents():
+    print x
+    
+New Topic:
+For much of history, science was based on Analytic Methods: predict behavior, given initial conditions and parameters (e.g., Newtonian physics)
+As 20th century progressed, Analytic Methods proved insufficient, so science developed:
+Simulation Methods: 
+- for systems that are not mathematically tractable (difficult to build predictive mathematical models).
+- allow for successive refining series of simulations.  Running a simulation gives insight about the problem.
+- often easier to extract useful intermediate results than to build a detailed analytic model.
+- made possible by computers.  
+  
+Simulation model:
+- gives useful information about behavior of a system
+- approximation of reality
+- descriptive, not prescriptive
+
+Brownian motion is an example of the kind of tool we are interested in: Random Walk.
+
+Random Walk Simulator
+Three Classes:
+- Drunk (walker)
+- Field
+- Location
+
+Python Lecture 13 Notes
+pylab has many functions from Matlab
+More info at matplotlib.sourceforge.net
+pylab commands:
+- pylab.xlim(xmin, xmax).  pylab.xlim() --> returns minimum and maximum values of current plot.
+- pylab.hist(list, bins = int)
+- pylab.xlabel/pylab.ylabel: sets axis labels.
+Normal distribution: always peaks at mean and falls off symmetrically.  Frequently used in constructing probabalistic models because (1) have nice mathematical properties, and
+(2) there are many naturally occurring instances.  Also, can be completely characterized by two parameters: mean, and SD.  Mean and SD can be used to compute confidence intervals.
+Standard Error: p = % sampled, n = sample size.  SE = ((p * (100 - p))/n) ^ 0.5
+
+Lecture 17 Notes:
+Pylab function polyfit does multivariate linear regression.  Arguments are obsX, obsY, degree 
+(degree = degree of polynomial, default = 1 or linear but it can handle quadratic, etc.)
+a,b = pylab.polyfit(xvals, yvals, 1)
+a,b,c = pylab.polyfit(xvals, yvals, 2)
+
+Lecture 18 Notes:
+Greedy algorithm:
+- At each step, choose locally optimal solution.  Assumes we know how to define locally optimal.  Also, no guarantee that locally optimal solutions lead to a globally optimal solution.
+Knapsack Problem:
+- Item: <value, weight>
+- W as max.weight
+- I: vector of available items
+- V: vector V[i] = 1 => I[i] has been taken.  (V[i] = 0 => I[i] has not been taken)
+- maximize: Sum(V[i]*I[i].value), subject to Sum(V[i]*I[i].weight) <= W.
+
+Lecture 20 Notes:
+- Hierarchical clustering: takes a very long time to find the shortest distance from your initial point.
+- k-Means clutering:
+    - Step 1: Choose k = number of clusters you want at the end.
+    - Step 2: Choose k points as initial centroids.  Centroid = "average point" for a given cluster, defined by a selected metric.  Need not be an actual point in the cluster.
+        initial centroids tend to be chosen at random.
+    - Step 3: Assign each point to the nearest centroid.  Only k comparisons, rather than n.
+    - Step 4: For each of the k clusters, choose a new centroid (computed based on selected points).
+    - Step 5: Assign each point to the nearest centroid to produce a new clustering.
+    - Step 6: Repeat steps 4 and 5 until change is small.
+    
+    Complexity: Each iteration is order k*n.  Typically you don't need many iterations.
+
+Lecture 21 Notes:
+    
+Review of Machine Learning:
+- Supervised Learning: Training set with labels.  Infer relationship between features and labels.
+- Unsupervised Learning: Training set without labels.  Infer relationships among points.
+- Be wary of overfitting, particularly if training data are small.
+- Features matter: Which ones are selected, whether they are normalized, whether they are weighted.
+
+Graph Theoretic Models: 
+- Graph = set of nodes (objects, vertices).  Nodes are connected by a set of edges (arcs).
+- Edges can have weights.
+- Analyzing/representing graphs:
+    - Adjacency Matrix (NxN) with weights.  Be careful of cases where you have multiple edges connecting two nodes.  Often better if connections are dense.
+    - Adjacency List - list all edges emanating from a node.  Often better if connections are sparse.
+    
+Lecture 22 Notes:
+
+Graph Problems:
+- Shortest Path Problem - shortest sequence of edges
+- Shortest Weighted Path Problem - smallest total weight
+- Cliques - find set of nodes such that there exists a path connecting each node in the set
+- Minimum Cut Problem - given a graph and two sets of nodes, find the minimum number of edges such that if you remove those edges, the two sets are disconnected.
+
+Depth First Search - goes down each node to the bottom, then backtracks.
+Memoization - uses Table Lookup to remember values associated with specific nodes.  Part of dynamic programming.
+- Dynamic programming provides tractable solutions to problems that appear intractable (i.e., intractable).
+- To use dynamic programming:
+    - Problems must have optimal substructure.  This means that a global solution can be found by combining local optimal solutions.
+    - Problems must have overlapping sub-problems.  Finding optimal solution means finding solutions to the same sub-problem multiple times.  That suggests that dynamic programming will save time.
+Dynamic programming solution to knapsack problem is pseudo-polynomial in order.  If all goes well, it can be polynomial, but it can also be exponential.   
+
+Lecture 24 Notes:
+
+In network queuing simulations, you aim for a balance between customer service and resource utilization.  Company using resources wants 100% resource utilization, but
+customers want excess capacity.
+- Start with jobs, jobs enter queue, wait, enter server, then depart.
+- Arrival process: 
+    - In groups -> batch process. 
+    - Distribution in time?  At regular intervals or randomly?  Model with inter-arrival-time distribution.
+        - Typically you see random intervals but exponentially distributed.
+- Service Mechanism:
+    - How long will it take to provide service?  Service time distribution.
+        - Depends on amount of work, speed of server, number of servers, and number of queues.  Do you allow for pre-emption (stop service to handle higher priority)
+        - One queue is always superior to multiple queues, but sometimes you don't have space for a single queue.
+- Queue characteristics
+    - Queueing discipline: How do you select next job?
+        - FIFO, First In/First Out
+        - LIFO, Last In/First Out
+        - SRPT, Shortest Remaining Processing Time
+- Simulations are helpful for designing queueing systems because there is randomness in intervals and in job lengths.
+- Questions about queueing systems:
+    - What is the average waiting time?
+    - Is waiting time bounded?
+    - What is average queue length?
+    - What is bound on queue length?
+    - Server utilization: what is the expected amount of time that servers will be fully occupied?
+    => If you can assign costs and values to each item, you can design an optimization model.
+- Fairness: In SRPT, if you have the largest processing time, you have to keep waiting for others, potentially risking "starvation."
